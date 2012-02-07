@@ -500,6 +500,7 @@ public class ComposeMessageActivity extends Activity
                 if (mTempMmsUri == null) {
                     return;
                 }
+                mAttachmentEditor.setCanEdit(false);
                 Intent intent = new Intent(ComposeMessageActivity.this,
                         SlideshowEditActivity.class);
                 intent.setData(mTempMmsUri);
@@ -3395,6 +3396,7 @@ public class ComposeMessageActivity extends Activity
         if (mWorkingMessage.hasSlideshow()) {
             mBottomPanel.setVisibility(View.GONE);
             mAttachmentEditor.requestFocus();
+            mAttachmentEditor.setCanEdit(true);
             return;
         }
 
