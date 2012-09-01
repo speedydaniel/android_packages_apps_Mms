@@ -84,7 +84,7 @@
         android:fillViewport="true"
         android:minHeight="72dp"
         android:paddingTop="4dp"
-        android:background="#ff121212"
+        android:background="#ff0a0a0a"
         android:paddingBottom="4dp" >
 
         <TextView
@@ -108,7 +108,7 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#ff121212"
+        android:background="#ff0a0a0a"
         android:paddingTop="4dp"
         android:paddingBottom="2dp" >
 
