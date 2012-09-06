@@ -100,6 +100,7 @@
             android:textSize="16sp"
             android:textColor="?android:attr/textColorPrimary"
             android:textColorLink="?android:attr/textColorPrimary" />
+
     </ScrollView>
 
     <!-- 'Tap to reply' editor, character counter and send button -->

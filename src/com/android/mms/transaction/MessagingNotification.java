@@ -1102,11 +1102,22 @@ public class MessagingNotification {
             }
         }
 
-        // Trigger the QuickMessage pop-up activity if enabled
-        // But don't show the QuickMessage if the user is in a call or the phone is ringing
-        if (qmPopupEnabled) {
+        // Display QuickMessage if enabled in preferences and this is an Sms message
+        if (MessagingPreferenceActivity.getQuickMessageEnabled(context)
+                && mostRecentNotification.mIsSms) {
+
+            // Don't show the QuickMessage if the user is in a call or the phone is ringing
             TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
             if (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE) {
+                // Trigger the main activity to fire up a dialog that shows the received messages
+                Intent qmIntent = new Intent();
+                qmIntent.setClass(context, QuickMessage.class);
+                qmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP |
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                qmIntent.putExtra(QuickMessage.SMS_FROM_NAME_EXTRA, mostRecentNotification.mSender.getName());
+                qmIntent.putExtra(QuickMessage.SMS_FROM_NUMBER_EXTRA, mostRecentNotification.mSender.getNumber());
+                qmIntent.putExtra(QuickMessage.SMS_NOTIFICATION_OBJECT_EXTRA, mostRecentNotification);
+                qmIntent.putExtra(QuickMessage.SMS_NOTIFICATION_ID_EXTRA, NOTIFICATION_ID);
                 context.startActivity(qmIntent);
             }
         }

@@ -173,4 +173,5 @@
         android:summary="@string/pref_summary_enable_emojis"
         android:defaultValue="false" />
     </PreferenceCategory>
+
 </PreferenceScreen>
