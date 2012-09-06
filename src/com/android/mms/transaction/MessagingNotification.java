@@ -942,11 +942,8 @@ public class MessagingNotification {
                 (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
             boolean nowSilent =
                 audioManager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE;
-            boolean shouldVibrate =
-                    audioManager.shouldVibrate(AudioManager.VIBRATE_TYPE_RINGER);
 
-            if ((vibrateAlways && shouldVibrate || vibrateSilent && nowSilent) &&
-                (vibrateOnCall || (!vibrateOnCall && callStateIdle))) {
+            if ((vibrateAlways || vibrateSilent && nowSilent) && (vibrateOnCall || (!vibrateOnCall && callStateIdle))) {
                 /* WAS: notificationdefaults |= Notification.DEFAULT_VIBRATE;*/
                 String mVibratePattern = "custom".equals(sp.getString(MessagingPreferenceActivity.NOTIFICATION_VIBRATE_PATTERN, null))
                         ? sp.getString(MessagingPreferenceActivity.NOTIFICATION_VIBRATE_PATTERN_CUSTOM, "0,1200")
@@ -974,41 +971,13 @@ public class MessagingNotification {
         noti.setDeleteIntent(PendingIntent.getBroadcast(context, 0,
                 sNotificationOnDeleteIntent, 0));
 
-        // See if QuickMessage pop-up support is enabled in preferences
-        boolean qmPopupEnabled = MessagingPreferenceActivity.getQuickMessageEnabled(context);
-
-        // Set up the QuickMessage intent
-        Intent qmIntent = null;
-        if (mostRecentNotification.mIsSms) {
-            // QuickMessage support is only for SMS
-            qmIntent = new Intent();
-            qmIntent.setClass(context, QuickMessage.class);
-            qmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP |
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            qmIntent.putExtra(QuickMessage.SMS_FROM_NAME_EXTRA, mostRecentNotification.mSender.getName());
-            qmIntent.putExtra(QuickMessage.SMS_FROM_NUMBER_EXTRA, mostRecentNotification.mSender.getNumber());
-            qmIntent.putExtra(QuickMessage.SMS_NOTIFICATION_OBJECT_EXTRA, mostRecentNotification);
-            qmIntent.putExtra(QuickMessage.SMS_NOTIFICATION_ID_EXTRA, NOTIFICATION_ID);
-        }
-
-        // Start getting the notification ready
         final Notification notification;
 
         if (messageCount == 1 || uniqueThreadCount == 1) {
-            // Add the QuickMessage action only if the pop-up won't be shown already
-            if (!qmPopupEnabled && qmIntent != null) {
-                CharSequence qmText = context.getText(R.string.qm_quick_reply);
-                PendingIntent qmPendingIntent = PendingIntent.getActivity(context, 0, qmIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT);
-                noti.addAction(R.drawable.ic_reply, qmText, qmPendingIntent);
-            }
-
-            // Add the Call action
             CharSequence callText = context.getText(R.string.menu_call);
             Intent callIntent = new Intent(Intent.ACTION_CALL);
             callIntent.setData(mostRecentNotification.mSender.getPhoneUri());
-            PendingIntent mCallPendingIntent = PendingIntent.getActivity(context, 0, callIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent mCallPendingIntent = PendingIntent.getActivity(context, 0, callIntent, 0);
             noti.addAction(R.drawable.ic_menu_call, callText, mCallPendingIntent);
         }
 
