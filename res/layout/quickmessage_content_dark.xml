@@ -83,7 +83,7 @@
         android:layout_weight="1"
         android:fillViewport="true"
         android:minHeight="72dp"
-        android:background="#ff1e1e1e"
+        android:background="#ff0a0a0a"
         android:paddingTop="4dp"
         android:paddingBottom="4dp" >
 
