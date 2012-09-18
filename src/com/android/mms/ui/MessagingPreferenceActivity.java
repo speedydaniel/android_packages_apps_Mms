@@ -75,7 +75,9 @@ public class MessagingPreferenceActivity extends PreferenceActivity
     public static final String STRIP_UNICODE            = "pref_key_strip_unicode";
     public static final String FULL_TIMESTAMP            = "pref_key_mms_full_timestamp";
     public static final String SENT_TIMESTAMP            = "pref_key_mms_use_sent_timestamp";
-    public static final String ENABLE_EMOJIS = "pref_key_enable_emojis";
+    public static final String DISPLAY_FULLDATE         = "pref_key_display_fulldate";
+    public static final String DISPLAY_QR_CALLBUTTON    = "pref_key_display_quickreply_callbutton";
+    public static final String ENABLE_EMOJIS            = "pref_key_enable_emojis";
 
     // Menu entries
     private static final int MENU_RESTORE_DEFAULTS    = 1;
@@ -398,5 +400,12 @@ public class MessagingPreferenceActivity extends PreferenceActivity
             }
         }
         mVibrateWhenPref.setSummary(null);
+    }
+
+    public static boolean getQRCallButtonEnabled(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean qrCallButtonEnabled =
+            prefs.getBoolean(MessagingPreferenceActivity.DISPLAY_QR_CALLBUTTON, true);
+        return qrCallButtonEnabled;
     }
 }
