@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2007-2008 Esmertec AG.
  * Copyright (C) 2007-2008 The Android Open Source Project
- * QuickMessage: Copyright (C) 2012 The CyanogenMod Project (DvTonder)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,23 +65,20 @@ public class MessagingPreferenceActivity extends PreferenceActivity
     public static final String AUTO_RETRIEVAL           = "pref_key_mms_auto_retrieval";
     public static final String RETRIEVAL_DURING_ROAMING = "pref_key_mms_retrieval_during_roaming";
     public static final String AUTO_DELETE              = "pref_key_auto_delete";
-    public static final String MANAGE_TEMPLATES         = "pref_key_templates_manage";
-    public static final String SHOW_GESTURE             = "pref_key_templates_show_gesture";
-    public static final String GESTURE_SENSITIVITY      = "pref_key_templates_gestures_sensitivity";
+    public static final String MANAGE_TEMPLATES = "pref_key_templates_manage";
+    public static final String SHOW_GESTURE = "pref_key_templates_show_gesture";
+    public static final String GESTURE_SENSITIVITY = "pref_key_templates_gestures_sensitivity";
     public static final String GESTURE_SENSITIVITY_VALUE = "pref_key_templates_gestures_sensitivity_value";
     public static final String NOTIFICATION_VIBRATE_PATTERN = "pref_key_mms_notification_vibrate_pattern";
     public static final String NOTIFICATION_VIBRATE_PATTERN_CUSTOM = "pref_key_mms_notification_vibrate_pattern_custom";
     public static final String NOTIFICATION_VIBRATE_CALL ="pre_key_mms_notification_vibrate_call";
-    public static final String STRIP_UNICODE             = "pref_key_strip_unicode";
+    public static final String STRIP_UNICODE            = "pref_key_strip_unicode";
     public static final String FULL_TIMESTAMP            = "pref_key_mms_full_timestamp";
     public static final String SENT_TIMESTAMP            = "pref_key_mms_use_sent_timestamp";
-    public static final String ENABLE_EMOJIS             = "pref_key_enable_emojis";
-
-    // QuickMessage
-    public static final String QUICKMESSAGE_ENABLED      = "pref_key_quickmessage";
-    public static final String QM_LOCKSCREEN_ENABLED     = "pref_key_qm_lockscreen";
-    public static final String QM_CLOSE_ALL_ENABLED      = "pref_key_close_all";
-    public static final String QM_DARK_THEME_ENABLED     = "pref_dark_theme";
+    public static final String DISPLAY_FULLDATE         = "pref_key_display_fulldate";
+    public static final String DISPLAY_QR_CALLBUTTON    = "pref_key_display_quickreply_callbutton";
+    public static final String ENABLE_EMOJIS            = "pref_key_enable_emojis";
+    public static final String QUICKREPLY_ENABLED      = "pref_key_quickreply";
 
     // Menu entries
     private static final int MENU_RESTORE_DEFAULTS    = 1;
@@ -104,12 +100,7 @@ public class MessagingPreferenceActivity extends PreferenceActivity
     private static final int CONFIRM_CLEAR_SEARCH_HISTORY_DIALOG = 3;
     private CharSequence[] mVibrateEntries;
     private CharSequence[] mVibrateValues;
-
-    // QuickMessage
-    private CheckBoxPreference mEnableQuickMessagePref;
-    private CheckBoxPreference mEnableQmLockscreenPref;
-    private CheckBoxPreference mEnableQmCloseAllPref;
-    private CheckBoxPreference mEnableQmDarkThemePref;
+    private CheckBoxPreference mEnableQuickReplyPref;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -147,12 +138,7 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         mManageTemplate = findPreference(MANAGE_TEMPLATES);
         mGestureSensitivity = (ListPreference) findPreference(GESTURE_SENSITIVITY);
 
-        // QuickMessage
-        mEnableQuickMessagePref = (CheckBoxPreference) findPreference(QUICKMESSAGE_ENABLED);
-        mEnableQmLockscreenPref = (CheckBoxPreference) findPreference(QM_LOCKSCREEN_ENABLED);
-        mEnableQmCloseAllPref = (CheckBoxPreference) findPreference(QM_CLOSE_ALL_ENABLED);
-        mEnableQmDarkThemePref = (CheckBoxPreference) findPreference(QM_DARK_THEME_ENABLED);
-
+	mEnableQuickReplyPref = (CheckBoxPreference) findPreference(QUICKREPLY_ENABLED);
         mVibrateEntries = getResources().getTextArray(R.array.prefEntries_vibrateWhen);
         mVibrateValues = getResources().getTextArray(R.array.prefValues_vibrateWhen);
 
@@ -221,11 +207,7 @@ public class MessagingPreferenceActivity extends PreferenceActivity
 
         setEnabledNotificationsPref();
 
-        // QuickMessage
-        setEnabledQuickMessagePref();
-        setEnabledQmLockscreenPref();
-        setEnabledQmCloseAllPref();
-        setEnabledQmDarkThemePref();
+	setEnabledQuickReplyPref();
 
         // If needed, migrate vibration setting from a previous version
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -278,28 +260,10 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         mEnableNotificationsPref.setChecked(getNotificationEnabled(this));
     }
 
-    private void setEnabledQuickMessagePref() {
+    private void setEnabledQuickReplyPref() {
         // The "enable quickmessage" setting is really stored in our own prefs. Read the
         // current value and set the checkbox to match.
-        mEnableQuickMessagePref.setChecked(getQuickMessageEnabled(this));
-    }
-
-    private void setEnabledQmLockscreenPref() {
-        // The "enable quickmessage on lock screen " setting is really stored in our own prefs. Read the
-        // current value and set the checkbox to match.
-        mEnableQmLockscreenPref.setChecked(getQmLockscreenEnabled(this));
-    }
-
-    private void setEnabledQmCloseAllPref() {
-        // The "enable close all" setting is really stored in our own prefs. Read the
-        // current value and set the checkbox to match.
-        mEnableQmCloseAllPref.setChecked(getQmCloseAllEnabled(this));
-    }
-
-    private void setEnabledQmDarkThemePref() {
-        // The "Use dark theme" setting is really stored in our own prefs. Read the
-        // current value and set the checkbox to match.
-        mEnableQmDarkThemePref.setChecked(getQmDarkThemeEnabled(this));
+        mEnableQuickReplyPref.setChecked(getQuickReplyEnabled(this));
     }
 
     private void setSmsDisplayLimit() {
@@ -347,7 +311,6 @@ public class MessagingPreferenceActivity extends PreferenceActivity
                     mSmsRecycler.getMessageMinLimit(),
                     mSmsRecycler.getMessageMaxLimit(),
                     R.string.pref_title_sms_delete).show();
-
         } else if (preference == mMmsLimitPref) {
             new NumberPickerDialog(this,
                     mMmsLimitListener,
@@ -355,33 +318,18 @@ public class MessagingPreferenceActivity extends PreferenceActivity
                     mMmsRecycler.getMessageMinLimit(),
                     mMmsRecycler.getMessageMaxLimit(),
                     R.string.pref_title_mms_delete).show();
-
         } else if (preference == mManageSimPref) {
             startActivity(new Intent(this, ManageSimMessages.class));
-
         } else if (preference == mClearHistoryPref) {
             showDialog(CONFIRM_CLEAR_SEARCH_HISTORY_DIALOG);
             return true;
-
         } else if (preference == mEnableNotificationsPref) {
             // Update the actual "enable notifications" value that is stored in secure settings.
             enableNotifications(mEnableNotificationsPref.isChecked(), this);
-
-        } else if (preference == mEnableQuickMessagePref) {
+        } else if (preference == mEnableQuickReplyPref) {
             // Update the actual "enable quickmessage" value that is stored in secure settings.
-            enableQuickMessage(mEnableQuickMessagePref.isChecked(), this);
+            enableQuickReply(mEnableQuickReplyPref.isChecked(), this);
 
-        } else if (preference == mEnableQmLockscreenPref) {
-            // Update the actual "enable quickmessage on lockscreen" value that is stored in secure settings.
-            enableQmLockscreen(mEnableQmLockscreenPref.isChecked(), this);
-
-        } else if (preference == mEnableQmCloseAllPref) {
-            // Update the actual "enable close all" value that is stored in secure settings.
-            enableQmCloseAll(mEnableQmCloseAllPref.isChecked(), this);
-
-        } else if (preference == mEnableQmDarkThemePref) {
-            // Update the actual "enable dark theme" value that is stored in secure settings.
-            enableQmDarkTheme(mEnableQmDarkThemePref.isChecked(), this);
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -445,61 +393,19 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         editor.apply();
     }
 
-    public static boolean getQuickMessageEnabled(Context context) {
+    public static boolean getQuickReplyEnabled(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean quickMessageEnabled =
-            prefs.getBoolean(MessagingPreferenceActivity.QUICKMESSAGE_ENABLED, false);
-        return quickMessageEnabled;
+        boolean quickReplyEnabled =
+            prefs.getBoolean(MessagingPreferenceActivity.QUICKREPLY_ENABLED, false);
+        return quickReplyEnabled;
     }
 
-    public static void enableQuickMessage(boolean enabled, Context context) {
+    public static void enableQuickReply(boolean enabled, Context context) {
         // Store the value of notifications in SharedPreferences
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putBoolean(MessagingPreferenceActivity.QUICKMESSAGE_ENABLED, enabled);
+        editor.putBoolean(MessagingPreferenceActivity.QUICKREPLY_ENABLED, enabled);
         editor.apply();
-    }
-
-    public static boolean getQmLockscreenEnabled(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean qmLockscreenEnabled =
-            prefs.getBoolean(MessagingPreferenceActivity.QM_LOCKSCREEN_ENABLED, false);
-        return qmLockscreenEnabled;
-    }
-
-    public static void enableQmLockscreen(boolean enabled, Context context) {
-        SharedPreferences.Editor editor =
-            PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putBoolean(MessagingPreferenceActivity.QM_LOCKSCREEN_ENABLED, enabled);
-        editor.apply();
-    }
-
-    public static boolean getQmCloseAllEnabled(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean qmCloseAllEnabled =
-            prefs.getBoolean(MessagingPreferenceActivity.QM_CLOSE_ALL_ENABLED, false);
-        return qmCloseAllEnabled;
-    }
-
-    public static void enableQmCloseAll(boolean enabled, Context context) {
-        SharedPreferences.Editor editor =
-            PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putBoolean(MessagingPreferenceActivity.QM_CLOSE_ALL_ENABLED, enabled);
-        editor.apply();
-    }
-
-    public static void enableQmDarkTheme(boolean enabled, Context context) {
-        SharedPreferences.Editor editor =
-            PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putBoolean(MessagingPreferenceActivity.QM_DARK_THEME_ENABLED, enabled);
-        editor.apply();
-    }
-
-    public static boolean getQmDarkThemeEnabled(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean qmDarkThemeEnabled =
-            prefs.getBoolean(MessagingPreferenceActivity.QM_DARK_THEME_ENABLED, false);
-        return qmDarkThemeEnabled;
     }
 
     private void registerListeners() {
@@ -524,5 +430,12 @@ public class MessagingPreferenceActivity extends PreferenceActivity
             }
         }
         mVibrateWhenPref.setSummary(null);
+    }
+
+    public static boolean getQRCallButtonEnabled(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean qrCallButtonEnabled =
+            prefs.getBoolean(MessagingPreferenceActivity.DISPLAY_QR_CALLBUTTON, true);
+        return qrCallButtonEnabled;
     }
 }

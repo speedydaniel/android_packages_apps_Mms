@@ -302,7 +302,7 @@ public class Conversation {
      * work is dispatched to a background thread. This function should
      * always be called from the UI thread.
      */
-    public void markAsRead(final boolean updateNotifications) {
+    public void markAsRead() {
         if (mMarkAsReadWaiting) {
             // We've already been asked to mark everything as read, but we're blocked.
             return;
@@ -349,11 +349,8 @@ public class Conversation {
                     }
                     setHasUnreadMessages(false);
                 }
-
-                if (updateNotifications) {
-                    // Always update notifications regardless of the read state.
-                    MessagingNotification.blockingUpdateAllNotifications(mContext);
-                }
+                // Always update notifications regardless of the read state.
+                MessagingNotification.blockingUpdateAllNotifications(mContext);
 
                 return null;
             }
@@ -376,7 +373,7 @@ public class Conversation {
             if (!mMarkAsReadBlocked) {
                 if (mMarkAsReadWaiting) {
                     mMarkAsReadWaiting = false;
-                    markAsRead(true);
+                    markAsRead();
                 }
             }
         }
