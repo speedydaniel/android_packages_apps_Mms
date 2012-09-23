@@ -145,9 +145,7 @@
             android:name=".ui.QuickReply"
             android:excludeFromRecents="true"
             android:taskAffinity="com.android.mms.ui.QuickReply"
-            android:theme="@android:style/Theme.Holo.Dialog" 
-	    android:launchMode="singleTop" />
-
+            android:theme="@android:style/Theme.Holo.Dialog" />
         <activity
             android:name=".ui.QuickReplyMulti"
             android:excludeFromRecents="true"
