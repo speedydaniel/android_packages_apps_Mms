@@ -95,7 +95,16 @@
                         android:entries="@array/prefEntries_vibrateWhen"
                         android:entryValues="@array/prefValues_vibrateWhen"
                         android:dialogTitle="@string/prefDialogTitle_vibrateWhen" />
-
+    <CheckBoxPreference android:defaultValue="false"
+                        android:key="pref_key_display_quickreply_autoopen"
+                        android:summary="@string/pref_summary_quickreply_autoopen"
+                        android:title="@string/pref_title_quickreply_autoopen"
+                        android:dependency="pref_key_enable_notifications" />
+    <CheckBoxPreference android:defaultValue="true"
+                        android:key="pref_key_display_quickreply_callbutton"
+                        android:summary="@string/pref_summary_quickreply_callbutton"
+                        android:title="@string/pref_title_quickreply_callbutton"
+                        android:dependency="pref_key_enable_notifications" />
     <com.android.mms.preferences.CustomVibrateListPreference
         android:layout="?android:attr/preferenceLayoutChild"
         android:key="pref_key_mms_notification_vibrate_pattern"
@@ -113,23 +122,6 @@
         android:title="@string/pref_title_mms_notification_vibrate_call"
         android:summary="@string/pref_summary_mms_notification_vibrate_call" />
   </PreferenceCategory>
-
-  <PreferenceCategory android:title="@string/quick_reply_sms">
-
-    <CheckBoxPreference
-        android:key="pref_key_quickreply"
-        android:title="@string/pref_quickreply_title"
-        android:dependency="pref_key_enable_notifications"
-        android:summary="@string/pref_quickreply_summary"
-        android:defaultValue="false" />
-
-    <CheckBoxPreference android:defaultValue="true"
-                        android:key="pref_key_display_quickreply_callbutton"
-                        android:summary="@string/pref_summary_quickreply_callbutton"
-                        android:title="@string/pref_title_quickreply_callbutton"
-                        android:dependency="pref_key_enable_notifications" />
-  </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/prefs_templates_settings" >
         <Preference
             android:key="pref_key_templates_manage"
@@ -160,7 +152,6 @@
         android:title="@string/pref_title_mms_use_sent_timestamp"
         android:summary="@string/pref_summary_mms_use_sent_timestamp"
         android:defaultValue="false" />
-
     <CheckBoxPreference android:key="pref_key_enable_emojis"
         android:title="@string/pref_title_enable_emojis"
         android:summary="@string/pref_summary_enable_emojis"
