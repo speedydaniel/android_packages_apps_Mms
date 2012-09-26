@@ -376,6 +376,15 @@
             <intent-filter>
                 <action android:name="com.android.mms.intent.action.ACTION_NOTIFY_DATASET_CHANGED" />
             </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
+        <service
+            android:name=".widget.MmsWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <activity
             android:name=".templates.TemplatesListActivity"
@@ -389,16 +398,5 @@
         <provider
             android:name=".templates.TemplatesProvider"
             android:authorities="com.android.cm.mms" />
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info" />
-        </receiver>
-
-        <service
-            android:name=".widget.MmsWidgetService"
-            android:exported="false"
-            android:permission="android.permission.BIND_REMOTEVIEWS" />
-    </application>
-
+        </application>
 </manifest>
