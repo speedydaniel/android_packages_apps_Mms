@@ -156,7 +156,11 @@
         android:title="@string/pref_title_enable_emojis"
         android:summary="@string/pref_summary_enable_emojis"
         android:defaultValue="false" />
-
+    <CheckBoxPreference android:key="pref_key_emojis_quick"
+                        android:title="@string/pref_title_pref_key_emojis_quick"
+                        android:summary="@string/pref_summary_pref_key_emojis_quick"
+                        android:dependency="pref_key_enable_emojis"
+                        android:defaultValue="false" />
      <ListPreference
         android:key="pref_key_mms_input_type"
         android:title="@string/pref_title_input_type"
