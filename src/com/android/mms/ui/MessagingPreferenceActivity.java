@@ -81,6 +81,7 @@ public class MessagingPreferenceActivity extends PreferenceActivity
     public static final String LOCK_SMS                 = "pref_key_lock_sms";
     public static final String ENABLE_EMOJIS            = "pref_key_enable_emojis";
     public static final String INPUT_TYPE                = "pref_key_mms_input_type";
+    public static final String ENABLE_QUICK_EMOJIS      = "pref_key_emojis_quick";
 
     // Menu entries
     private static final int MENU_RESTORE_DEFAULTS    = 1;
