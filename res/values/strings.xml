@@ -948,5 +948,7 @@
     <string name="qr_pick_emoji">Insert Emoji</string>
     <string name="qr_close_popup">Close</string>
     <string name="qr_multi_ask">Who do you want to reply to?</string>
+    <string name="pref_lock_sms">Enable lockscreen popup</string>
+    <string name="pref_lock_sms_summary">Allow Quick Reply auto-open to pop up on locked screen</string>
 
 </resources>

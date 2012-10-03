@@ -1048,7 +1048,12 @@ public class MessagingNotification {
                 if(MessagingPreferenceActivity.getQRAutoOpenEnabled(context) && mostRecentNotification.mIsSms) {
                     TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                     KeyguardManager kgMgr = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-                    if(kgMgr == null || !kgMgr.inKeyguardRestrictedInputMode()) {
+
+		    if(MessagingPreferenceActivity.getLockSmsEnabled(context)) {
+			if (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE) {
+			    context.startActivity(quickReply);
+			}
+		    } else if(kgMgr == null || !kgMgr.inKeyguardRestrictedInputMode()) {
                         if(tm == null || tm.getCallState() == TelephonyManager.CALL_STATE_IDLE) {
                             context.startActivity(quickReply);
                         }
