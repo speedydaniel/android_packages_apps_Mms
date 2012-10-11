@@ -1188,7 +1188,7 @@ public class ComposeMessageActivity extends Activity
                         .setOnMenuItemClickListener(l);
             }
 
-            if (msgItem.isMms()) {
+            if (msgItem.isMms() && msgItem.isDownloaded()) {
                 switch (msgItem.mBoxId) {
                     case Mms.MESSAGE_BOX_INBOX:
                         break;
