@@ -500,6 +500,7 @@ public class ComposeMessageActivity extends Activity
                 if (mTempMmsUri == null) {
                     return;
                 }
+                mAttachmentEditor.setCanEdit(false);
                 Intent intent = new Intent(ComposeMessageActivity.this,
                         SlideshowEditActivity.class);
                 intent.setData(mTempMmsUri);
@@ -1188,7 +1189,7 @@ public class ComposeMessageActivity extends Activity
                         .setOnMenuItemClickListener(l);
             }
 
-            if (msgItem.isMms()) {
+            if (msgItem.isMms() && msgItem.isDownloaded()) {
                 switch (msgItem.mBoxId) {
                     case Mms.MESSAGE_BOX_INBOX:
                         break;
@@ -2625,7 +2626,12 @@ public class ComposeMessageActivity extends Activity
 
     @Override
     public void onPreMessageSent() {
-        runOnUiThread(mResetMessageRunnable);
+        if (mExitOnSent) {
+            // But bail out if we are supposed to exit after the message is sent.
+            finish();
+        } else {
+            runOnUiThread(mResetMessageRunnable);
+        }
     }
 
     @Override
@@ -3390,6 +3396,7 @@ public class ComposeMessageActivity extends Activity
         if (mWorkingMessage.hasSlideshow()) {
             mBottomPanel.setVisibility(View.GONE);
             mAttachmentEditor.requestFocus();
+            mAttachmentEditor.setCanEdit(true);
             return;
         }
 
@@ -3797,10 +3804,6 @@ public class ComposeMessageActivity extends Activity
             addRecipientsListeners();
 
             mScrollOnSend = true;   // in the next onQueryComplete, scroll the list to the end.
-        }
-        // But bail out if we are supposed to exit after the message is sent.
-        if (mExitOnSent) {
-            finish();
         }
     }
 
