@@ -16,16 +16,16 @@
 
 package com.android.mms;
 
-import com.android.mms.data.Contact;
-import com.android.mms.data.Conversation;
-import com.android.mms.data.RecipientIdCache;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.util.Log;
+
+import com.android.mms.data.Contact;
+import com.android.mms.data.Conversation;
+import com.android.mms.data.RecipientIdCache;
 
 public class LogTag {
     public static final String TAG = "Mms";
@@ -114,7 +114,7 @@ public class LogTag {
             activity.runOnUiThread(new Runnable() {
                 public void run() {
                     new AlertDialog.Builder(activity)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setIconAttribute(android.R.attr.alertDialogIcon)
                         .setTitle(R.string.error_state)
                         .setMessage(msg + "\n\n" + activity.getString(R.string.error_state_text))
                         .setPositiveButton(R.string.yes, new OnClickListener() {

@@ -17,23 +17,21 @@
 
 package com.android.mms.ui;
 
-import com.android.mms.R;
-import com.android.mms.data.WorkingMessage;
-import com.android.mms.model.SlideModel;
-import com.android.mms.model.SlideshowModel;
-import com.android.mms.util.ItemLoadedCallback;
-
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+
+import com.android.mms.R;
+import com.android.mms.data.WorkingMessage;
+import com.android.mms.model.SlideModel;
+import com.android.mms.model.SlideshowModel;
 
 /**
  * This is an embedded editor/view to add photos and sound/video clips
@@ -60,9 +58,7 @@ public class AttachmentEditor extends LinearLayout {
     private SlideshowModel mSlideshow;
     private Presenter mPresenter;
     private boolean mCanSend;
-    private boolean mCanEdit;
     private Button mSendButton;
-    private Button mEditButton;
 
     public AttachmentEditor(Context context, AttributeSet attr) {
         super(context, attr);
@@ -112,19 +108,6 @@ public class AttachmentEditor extends LinearLayout {
         if (null != mSendButton) {
             mSendButton.setEnabled(mCanSend);
             mSendButton.setFocusable(mCanSend);
-        }
-    }
-
-    public void setCanEdit(boolean enable) {
-        if (mCanEdit != enable) {
-            mCanEdit = enable;
-            updateEditButton();
-        }
-    }
-
-    private void updateEditButton() {
-        if (null != mEditButton) {
-            mEditButton.setEnabled(mCanEdit);
         }
     }
 
@@ -219,15 +202,13 @@ public class AttachmentEditor extends LinearLayout {
                 R.id.slideshow_attachment_view);
         view.setVisibility(View.VISIBLE);
 
-        mEditButton = (Button) view.findViewById(R.id.edit_slideshow_button);
+        Button editBtn = (Button) view.findViewById(R.id.edit_slideshow_button);
         mSendButton = (Button) view.findViewById(R.id.send_slideshow_button);
         updateSendButton();
         final ImageButton playBtn = (ImageButton) view.findViewById(
                 R.id.play_slideshow_button);
 
-        if (mEditButton != null) {
-            mEditButton.setOnClickListener(new MessageOnClick(MSG_EDIT_SLIDESHOW));
-        }
+        editBtn.setOnClickListener(new MessageOnClick(MSG_EDIT_SLIDESHOW));
         mSendButton.setOnClickListener(new MessageOnClick(MSG_SEND_SLIDESHOW));
         playBtn.setOnClickListener(new MessageOnClick(MSG_PLAY_SLIDESHOW));
 

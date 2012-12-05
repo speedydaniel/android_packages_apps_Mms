@@ -40,15 +40,9 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INSTALL_DRM" />
+    <uses-permission android:name="android.permission.WRITE_APN_SETTINGS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-
-    <!-- Grant permission to system apps to access receiver -->
-    <permission android:name="android.permission.MMS_PUSH"
-                android:protectionLevel="signatureOrSystem"
-                android:label="@string/label_mms_push"
-                android:description="@string/desc_mms_push"/>
-    <uses-permission android:name="android.permission.MMS_PUSH"/>
 
     <application
         android:name="MmsApp"
@@ -237,13 +231,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".transaction.MmsSystemPushMsgReceiver"
-                  android:permission="android.permission.MMS_PUSH">
-                  <intent-filter>
-                      <action android:name="android.intent.action.MMS_PUSH" />
-                  </intent-filter>
-        </receiver>
-
         <activity
             android:name=".ui.ManageSimMessages"
             android:configChanges="orientation|screenSize|keyboardHidden"
@@ -376,6 +363,7 @@
             <intent-filter>
                 <action android:name="com.android.mms.intent.action.ACTION_NOTIFY_DATASET_CHANGED" />
             </intent-filter>
+
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info" />
@@ -385,18 +373,6 @@
             android:name=".widget.MmsWidgetService"
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
+    </application>
 
-        <activity
-            android:name=".templates.TemplatesListActivity"
-            android:theme="@style/MmsHoloTheme"
-            android:label="@string/template_list_title" >
-        </activity>
-        <activity android:name=".templates.TemplateEditor"
-            android:theme="@style/MmsHoloTheme"
-            android:label="@string/template_new_title">
-        </activity>
-        <provider
-            android:name=".templates.TemplatesProvider"
-            android:authorities="com.android.cm.mms" />
-        </application>
 </manifest>

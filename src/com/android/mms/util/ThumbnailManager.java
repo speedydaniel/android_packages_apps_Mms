@@ -24,11 +24,11 @@ import java.util.Set;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory.Options;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.Log;
@@ -36,7 +36,6 @@ import android.util.Log;
 import com.android.mms.LogTag;
 import com.android.mms.R;
 import com.android.mms.TempFileProvider;
-import com.android.mms.ui.MessageItem;
 import com.android.mms.ui.UriImage;
 import com.android.mms.util.ImageCacheService.ImageData;
 
@@ -160,13 +159,22 @@ public class ThumbnailManager extends BackgroundLoaderManager {
             mExecutor.execute(task);
         }
         return new ItemLoadedFuture() {
+            private boolean mIsDone;
+
             @Override
-            public void cancel() {
+            public void cancel(Uri uri) {
                 cancelCallback(callback);
+                removeThumbnail(uri);   // if the thumbnail is half loaded, force a reload next time
             }
+
+            @Override
+            public void setIsDone(boolean done) {
+                mIsDone = done;
+            }
+
             @Override
             public boolean isDone() {
-                return false;
+                return mIsDone;
             }
         };
     }
@@ -194,7 +202,12 @@ public class ThumbnailManager extends BackgroundLoaderManager {
     }
 
     public void removeThumbnail(Uri uri) {
-        mThumbnailCache.remove(uri);
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "removeThumbnail: " + uri);
+        }
+        if (uri != null) {
+            mThumbnailCache.remove(uri);
+        }
     }
 
     @Override

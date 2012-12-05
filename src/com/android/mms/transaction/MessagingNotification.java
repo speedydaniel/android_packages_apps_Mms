@@ -20,41 +20,27 @@ package com.android.mms.transaction;
 import static com.google.android.mms.pdu.PduHeaders.MESSAGE_TYPE_NOTIFICATION_IND;
 import static com.google.android.mms.pdu.PduHeaders.MESSAGE_TYPE_RETRIEVE_CONF;
 
-import com.android.mms.R;
-import com.android.mms.LogTag;
-import com.android.mms.data.Contact;
-import com.android.mms.data.Conversation;
-import com.android.mms.data.WorkingMessage;
-import com.android.mms.model.SlideModel;
-import com.android.mms.model.SlideshowModel;
-import com.android.mms.ui.ComposeMessageActivity;
-import com.android.mms.ui.ConversationList;
-import com.android.mms.ui.MessagingPreferenceActivity;
-import com.android.mms.util.AddressUtils;
-import com.android.mms.util.DownloadManager;
-import com.android.mms.widget.MmsWidgetProvider;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-import com.google.android.mms.MmsException;
-import com.google.android.mms.pdu.EncodedStringValue;
-import com.google.android.mms.pdu.GenericPdu;
-import com.google.android.mms.pdu.MultimediaMessagePdu;
-import com.google.android.mms.pdu.PduHeaders;
-import com.google.android.mms.pdu.PduPersister;
-import android.database.sqlite.SqliteWrapper;
-
-import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.sqlite.SqliteWrapper;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
@@ -65,7 +51,6 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Telephony.Mms;
 import android.provider.Telephony.Sms;
-import android.telephony.TelephonyManager;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -75,13 +60,26 @@ import android.text.style.TextAppearanceSpan;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import com.android.mms.LogTag;
+import com.android.mms.R;
+import com.android.mms.data.Contact;
+import com.android.mms.data.Conversation;
+import com.android.mms.data.WorkingMessage;
+import com.android.mms.model.SlideModel;
+import com.android.mms.model.SlideshowModel;
+import com.android.mms.ui.ComposeMessageActivity;
+import com.android.mms.ui.ConversationList;
+import com.android.mms.ui.MessageUtils;
+import com.android.mms.ui.MessagingPreferenceActivity;
+import com.android.mms.util.AddressUtils;
+import com.android.mms.util.DownloadManager;
+import com.android.mms.widget.MmsWidgetProvider;
+import com.google.android.mms.MmsException;
+import com.google.android.mms.pdu.EncodedStringValue;
+import com.google.android.mms.pdu.GenericPdu;
+import com.google.android.mms.pdu.MultimediaMessagePdu;
+import com.google.android.mms.pdu.PduHeaders;
+import com.google.android.mms.pdu.PduPersister;
 
 /**
  * This class is used to update the notification indicator. It will check
@@ -91,7 +89,8 @@ import java.util.TreeSet;
 public class MessagingNotification {
 
     private static final String TAG = LogTag.APP;
-    private static final boolean DEBUG = false; // TODO turn off before ship
+
+    private static final boolean DEBUG = false;
 
     private static final int NOTIFICATION_ID = 123;
     public static final int MESSAGE_FAILED_NOTIFICATION_ID = 789;
@@ -181,17 +180,8 @@ public class MessagingNotification {
     private static final int MAX_BITMAP_DIMEN_DP = 360;
     private static float sScreenDensity;
 
-    /**
-     * mNotificationSet is kept sorted by the incoming message delivery time,
-     * with the most recent message first.
-     */
-    private static SortedSet<NotificationInfo> sNotificationSet =
-            new TreeSet<NotificationInfo>(INFO_COMPARATOR);
-
-    private static final int MAX_MESSAGES_TO_SHOW = 8; // the maximum number of
-                                                       // new messages to
-                                                       // show in a single
-                                                       // notification.
+    private static final int MAX_MESSAGES_TO_SHOW = 8;  // the maximum number of new messages to
+                                                        // show in a single notification.
 
     private MessagingNotification() {
     }
@@ -217,7 +207,7 @@ public class MessagingNotification {
      * play the notification sound at a lower volume. Make sure you set this to
      * THREAD_NONE when the UI component that shows the thread is no longer
      * visible to the user (e.g. Activity.onPause(), etc.)
-     *
+     * 
      * @param threadId The ID of the thread that the user is currently viewing.
      *            Pass THREAD_NONE if the user is not viewing a thread, or
      *            THREAD_ALL if the user is viewing the conversation list (note:
@@ -226,6 +216,9 @@ public class MessagingNotification {
     public static void setCurrentlyDisplayedThreadId(long threadId) {
         synchronized (sCurrentlyDisplayedThreadLock) {
             sCurrentlyDisplayedThreadId = threadId;
+            if (DEBUG) {
+                Log.d(TAG, "setCurrentlyDisplayedThreadId: " + sCurrentlyDisplayedThreadId);
+            }
         }
     }
 
@@ -233,12 +226,17 @@ public class MessagingNotification {
      * Checks to see if there are any "unseen" messages or delivery reports.
      * Shows the most recent notification if there is one. Does its work and
      * query in a worker thread.
-     *
+     * 
      * @param context the context to use
      */
     public static void nonBlockingUpdateNewMessageIndicator(final Context context,
             final long newMsgThreadId,
             final boolean isStatusMessage) {
+        if (DEBUG) {
+            Log.d(TAG, "nonBlockingUpdateNewMessageIndicator: newMsgThreadId: " +
+                    newMsgThreadId +
+                    " sCurrentlyDisplayedThreadId: " + sCurrentlyDisplayedThreadId);
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -250,7 +248,7 @@ public class MessagingNotification {
     /**
      * Checks to see if there are any "unseen" messages or delivery reports and
      * builds a sorted (by delivery date) list of unread notifications.
-     *
+     * 
      * @param context the context to use
      * @param newMsgThreadId The thread ID of a new message that we're to notify
      *            about; if there's no new message, use THREAD_NONE. If we
@@ -260,39 +258,51 @@ public class MessagingNotification {
      */
     public static void blockingUpdateNewMessageIndicator(Context context, long newMsgThreadId,
             boolean isStatusMessage) {
-        synchronized (sCurrentlyDisplayedThreadLock) {
-            if (newMsgThreadId > 0 && newMsgThreadId == sCurrentlyDisplayedThreadId) {
-                if (DEBUG) {
-                    Log.d(TAG, "blockingUpdateNewMessageIndicator: newMsgThreadId == " +
-                            "sCurrentlyDisplayedThreadId so NOT showing notification," +
-                            " but playing soft sound. threadId: " + newMsgThreadId);
-                }
-                playInConversationNotificationSound(context);
-                return;
-            }
+        if (DEBUG) {
+            Contact.logWithTrace(TAG, "blockingUpdateNewMessageIndicator: newMsgThreadId: " +
+                    newMsgThreadId);
         }
-        sNotificationSet.clear();
+        // notificationSet is kept sorted by the incoming message delivery time, with the
+        // most recent message first.
+        SortedSet<NotificationInfo> notificationSet =
+                new TreeSet<NotificationInfo>(INFO_COMPARATOR);
 
-        MmsSmsDeliveryInfo delivery = null;
         Set<Long> threads = new HashSet<Long>(4);
 
-        int count = 0;
-        addMmsNotificationInfos(context, threads);
-        addSmsNotificationInfos(context, threads);
+        addMmsNotificationInfos(context, threads, notificationSet);
+        addSmsNotificationInfos(context, threads, notificationSet);
 
-        cancelNotification(context, NOTIFICATION_ID);
-        if (!sNotificationSet.isEmpty()) {
-            if (Log.isLoggable(LogTag.APP, Log.VERBOSE)) {
-                Log.d(TAG, "blockingUpdateNewMessageIndicator: count=" + count +
+        if (notificationSet.isEmpty()) {
+            if (DEBUG) {
+                Log.d(TAG, "blockingUpdateNewMessageIndicator: notificationSet is empty, " +
+                        "canceling existing notifications");
+            }
+            cancelNotification(context, NOTIFICATION_ID);
+        } else {
+            if (DEBUG || Log.isLoggable(LogTag.APP, Log.VERBOSE)) {
+                Log.d(TAG, "blockingUpdateNewMessageIndicator: count=" + notificationSet.size() +
                         ", newMsgThreadId=" + newMsgThreadId);
             }
-            updateNotification(context, newMsgThreadId != THREAD_NONE, threads.size());
+            synchronized (sCurrentlyDisplayedThreadLock) {
+                if (newMsgThreadId > 0 && newMsgThreadId == sCurrentlyDisplayedThreadId &&
+                        threads.contains(newMsgThreadId)) {
+                    if (DEBUG) {
+                        Log.d(TAG, "blockingUpdateNewMessageIndicator: newMsgThreadId == " +
+                                "sCurrentlyDisplayedThreadId so NOT showing notification," +
+                                " but playing soft sound. threadId: " + newMsgThreadId);
+                    }
+                    playInConversationNotificationSound(context);
+                    return;
+                }
+            }
+            updateNotification(context, newMsgThreadId != THREAD_NONE, threads.size(),
+                    notificationSet);
         }
 
         // And deals with delivery reports (which use Toasts). It's safe to call
         // in a worker
         // thread because the toast will eventually get posted to a handler.
-        delivery = getSmsNewDeliveryInfo(context);
+        MmsSmsDeliveryInfo delivery = getSmsNewDeliveryInfo(context);
         if (delivery != null) {
             delivery.deliver(context, isStatusMessage);
         }
@@ -320,8 +330,12 @@ public class MessagingNotification {
      * Updates all pending notifications, clearing or updating them as
      * necessary.
      */
-    public static void blockingUpdateAllNotifications(final Context context) {
-        nonBlockingUpdateNewMessageIndicator(context, THREAD_NONE, false);
+    public static void blockingUpdateAllNotifications(final Context context, long threadId) {
+        if (DEBUG) {
+            Contact.logWithTrace(TAG, "blockingUpdateAllNotifications: newMsgThreadId: " +
+                    threadId);
+        }
+        nonBlockingUpdateNewMessageIndicator(context, threadId, false);
         nonBlockingUpdateSendFailedNotification(context);
         updateDownloadFailedNotification(context);
         MmsWidgetProvider.notifyDatasetChanged(context);
@@ -562,7 +576,7 @@ public class MessagingNotification {
     }
 
     private static final void addMmsNotificationInfos(
-            Context context, Set<Long> threads) {
+            Context context, Set<Long> threads, SortedSet<NotificationInfo> notificationSet) {
         ContentResolver resolver = context.getContentResolver();
 
         // This query looks like this when logged:
@@ -596,6 +610,8 @@ public class MessagingNotification {
 
                 String subject = getMmsSubject(
                         cursor.getString(COLUMN_SUBJECT), cursor.getInt(COLUMN_SUBJECT_CS));
+                subject = MessageUtils.cleanseMmsSubject(context, subject);
+
                 long threadId = cursor.getLong(COLUMN_THREAD_ID);
                 long timeMillis = cursor.getLong(COLUMN_DATE) * 1000;
 
@@ -628,6 +644,7 @@ public class MessagingNotification {
                     }
                 } catch (final MmsException e) {
                     Log.e(TAG, "MmsException loading uri: " + msgUri, e);
+                    continue;   // skip this bad boy -- don't generate an empty notification
                 }
 
                 NotificationInfo info = getNewMessageNotificationInfo(context,
@@ -640,7 +657,7 @@ public class MessagingNotification {
                         contact,
                         attachmentType);
 
-                sNotificationSet.add(info);
+                notificationSet.add(info);
 
                 threads.add(threadId);
             }
@@ -705,7 +722,7 @@ public class MessagingNotification {
     }
 
     private static final void addSmsNotificationInfos(
-            Context context, Set<Long> threads) {
+            Context context, Set<Long> threads, SortedSet<NotificationInfo> notificationSet) {
         ContentResolver resolver = context.getContentResolver();
         Cursor cursor = SqliteWrapper.query(context, resolver, Sms.CONTENT_URI,
                 SMS_STATUS_PROJECTION, NEW_INCOMING_SM_CONSTRAINT,
@@ -740,7 +757,7 @@ public class MessagingNotification {
                         threadId, timeMillis, null /* attachmentBitmap */,
                         contact, WorkingMessage.TEXT);
 
-                sNotificationSet.add(info);
+                notificationSet.add(info);
 
                 threads.add(threadId);
                 threads.add(cursor.getLong(COLUMN_THREAD_ID));
@@ -782,6 +799,7 @@ public class MessagingNotification {
         NotificationManager nm = (NotificationManager) context.getSystemService(
                 Context.NOTIFICATION_SERVICE);
 
+        Log.d(TAG, "cancelNotification");
         nm.cancel(notificationId);
     }
 
@@ -808,17 +826,18 @@ public class MessagingNotification {
     /**
      * updateNotification is *the* main function for building the actual
      * notification handed to the NotificationManager
-     *
+     * 
      * @param context
      * @param isNew if we've got a new message, show the ticker
      * @param uniqueThreadCount
+     * @param notificationSet the set of notifications to display
      */
     private static void updateNotification(
             Context context,
             boolean isNew,
-            int uniqueThreadCount) {
-        // If the user has turned off notifications in settings, don't do any
-        // notifying.
+            int uniqueThreadCount,
+            SortedSet<NotificationInfo> notificationSet) {
+        // If the user has turned off notifications in settings, don't do any notifying.
         if (!MessagingPreferenceActivity.getNotificationEnabled(context)) {
             if (DEBUG) {
                 Log.d(TAG, "updateNotification: notifications turned off in prefs, bailing");
@@ -826,10 +845,9 @@ public class MessagingNotification {
             return;
         }
 
-        // Figure out what we've got -- whether all sms's, mms's, or a mixture
-        // of both.
-        int messageCount = sNotificationSet.size();
-        NotificationInfo mostRecentNotification = sNotificationSet.first();
+        // Figure out what we've got -- whether all sms's, mms's, or a mixture of both.
+        final int messageCount = notificationSet.size();
+        NotificationInfo mostRecentNotification = notificationSet.first();
 
         final Notification.Builder noti = new Notification.Builder(context)
                 .setWhen(mostRecentNotification.mTimeMillis);
@@ -926,10 +944,6 @@ public class MessagingNotification {
                 vibrateWhen = context.getString(R.string.prefDefault_vibrateWhen);
             }
 
-            TelephonyManager mTM = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            boolean callStateIdle = mTM.getCallState() == TelephonyManager.CALL_STATE_IDLE;
-            boolean vibrateOnCall = sp.getBoolean(MessagingPreferenceActivity.NOTIFICATION_VIBRATE_CALL, true);
-
             boolean vibrateAlways = vibrateWhen.equals("always");
             boolean vibrateSilent = vibrateWhen.equals("silent");
             AudioManager audioManager =
@@ -937,24 +951,14 @@ public class MessagingNotification {
             boolean nowSilent =
                     audioManager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE;
 
-            if ((vibrateAlways || vibrateSilent && nowSilent) && (vibrateOnCall || (!vibrateOnCall && callStateIdle))) {
-                /* WAS: notificationdefaults |= Notification.DEFAULT_VIBRATE;*/
-                String mVibratePattern = "custom".equals(sp.getString(MessagingPreferenceActivity.NOTIFICATION_VIBRATE_PATTERN, null))
-                        ? sp.getString(MessagingPreferenceActivity.NOTIFICATION_VIBRATE_PATTERN_CUSTOM, "0,1200")
-                                : sp.getString(MessagingPreferenceActivity.NOTIFICATION_VIBRATE_PATTERN, "0,1200");
-                        if(!mVibratePattern.equals("")) {
-                            noti.setVibrate(parseVibratePattern(mVibratePattern));
-                        } else {
-                            defaults |= Notification.DEFAULT_VIBRATE;
-                        }
+            if (vibrateAlways || vibrateSilent && nowSilent) {
+                defaults |= Notification.DEFAULT_VIBRATE;
             }
 
             String ringtoneStr = sp.getString(MessagingPreferenceActivity.NOTIFICATION_RINGTONE,
                     null);
             noti.setSound(TextUtils.isEmpty(ringtoneStr) ? null : Uri.parse(ringtoneStr));
-            if (DEBUG) {
-                Log.d(TAG, "updateNotification: new message, adding sound to the notification");
-            }
+            Log.d(TAG, "updateNotification: new message, adding sound to the notification");
         }
 
         defaults |= Notification.DEFAULT_LIGHTS;
@@ -1006,7 +1010,7 @@ public class MessagingNotification {
             if (uniqueThreadCount == 1) {
                 SpannableStringBuilder buf = new SpannableStringBuilder();
                 NotificationInfo infos[] =
-                        sNotificationSet.toArray(new NotificationInfo[sNotificationSet.size()]);
+                        notificationSet.toArray(new NotificationInfo[messageCount]);
                 int len = infos.length;
                 for (int i = len - 1; i >= 0; i--) {
                     NotificationInfo info = infos[i];
@@ -1044,21 +1048,6 @@ public class MessagingNotification {
                 PendingIntent piText = PendingIntent.getActivity(context, 0, quickReply,
                         PendingIntent.FLAG_UPDATE_CURRENT);
                 noti.addAction(R.drawable.ic_menu_msg_compose_holo_dark, quickText, piText);
-
-                if(MessagingPreferenceActivity.getQRAutoOpenEnabled(context) && mostRecentNotification.mIsSms) {
-                    TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                    KeyguardManager kgMgr = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-
-		    if(MessagingPreferenceActivity.getLockSmsEnabled(context)) {
-			if (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE) {
-			    context.startActivity(quickReply);
-			}
-		    } else if(kgMgr == null || !kgMgr.inKeyguardRestrictedInputMode()) {
-                        if(tm == null || tm.getCallState() == TelephonyManager.CALL_STATE_IDLE) {
-                            context.startActivity(quickReply);
-                        }
-                    }
-                }
             }
         }
 
@@ -1083,6 +1072,9 @@ public class MessagingNotification {
                         .bigText(mostRecentNotification.formatBigMessage(context))
                         .build();
             }
+            if (DEBUG) {
+                Log.d(TAG, "updateNotification: single message notification");
+            }
         } else {
             // We've got multiple messages
             if (uniqueThreadCount == 1) {
@@ -1092,7 +1084,7 @@ public class MessagingNotification {
                 // Begin a line for each subsequent message.
                 SpannableStringBuilder buf = new SpannableStringBuilder();
                 NotificationInfo infos[] =
-                        sNotificationSet.toArray(new NotificationInfo[sNotificationSet.size()]);
+                        notificationSet.toArray(new NotificationInfo[messageCount]);
                 int len = infos.length;
                 for (int i = len - 1; i >= 0; i--) {
                     NotificationInfo info = infos[i];
@@ -1110,18 +1102,20 @@ public class MessagingNotification {
                 // Show a single notification -- big style with the text of all
                 // the messages
                 notification = new Notification.BigTextStyle(noti)
-                        .bigText(buf)
-                        // Forcibly show the last line, with the app's smallIcon
-                        // in it, if we
-                        // kicked the smallIcon out with an avatar bitmap
-                        .setSummaryText((avatar == null) ? null : " ")
-                        .build();
+                    .bigText(buf)
+                    // Forcibly show the last line, with the app's smallIcon in it, if we
+                    // kicked the smallIcon out with an avatar bitmap
+                    .setSummaryText((avatar == null) ? null : " ")
+                    .build();
+                if (DEBUG) {
+                    Log.d(TAG, "updateNotification: multi messages for single thread");
+                }
             } else {
                 // Build a set of the most recent notification per threadId.
-                HashSet<Long> uniqueThreads = new HashSet<Long>(sNotificationSet.size());
+                HashSet<Long> uniqueThreads = new HashSet<Long>(messageCount);
                 ArrayList<NotificationInfo> mostRecentNotifPerThread =
                         new ArrayList<NotificationInfo>();
-                Iterator<NotificationInfo> notifications = sNotificationSet.iterator();
+                Iterator<NotificationInfo> notifications = notificationSet.iterator();
                 while (notifications.hasNext()) {
                     NotificationInfo notificationInfo = notifications.next();
                     if (!uniqueThreads.contains(notificationInfo.mThreadId)) {
@@ -1308,7 +1302,7 @@ public class MessagingNotification {
     /**
      * Query the DB and return the number of undelivered messages (total for
      * both SMS and MMS)
-     *
+     * 
      * @param context The context
      * @param threadIdResult A container to put the result in, according to the
      *            following rules: threadIdResult[0] contains the thread id of
@@ -1416,7 +1410,7 @@ public class MessagingNotification {
 
     /**
      * Get the message ID of the SMS message with the given URI
-     *
+     * 
      * @param context The context
      * @param uri The URI of the SMS message
      * @return The message id
@@ -1440,7 +1434,7 @@ public class MessagingNotification {
 
     /**
      * Get the thread ID of the SMS message with the given URI
-     *
+     * 
      * @param context The context
      * @param uri The URI of the SMS message
      * @return The thread ID, or THREAD_NONE if the URI contains no entries
@@ -1456,13 +1450,25 @@ public class MessagingNotification {
                 null);
 
         if (cursor == null) {
+            if (DEBUG) {
+                Log.d(TAG, "getSmsThreadId uri: " + uri + " NULL cursor! returning THREAD_NONE");
+            }
             return THREAD_NONE;
         }
 
         try {
             if (cursor.moveToFirst()) {
-                return cursor.getLong(cursor.getColumnIndex(Sms.THREAD_ID));
+                long threadId = cursor.getLong(cursor.getColumnIndex(Sms.THREAD_ID));
+                if (DEBUG) {
+                    Log.d(TAG, "getSmsThreadId uri: " + uri +
+                            " returning threadId: " + threadId);
+                }
+                return threadId;
             } else {
+                if (DEBUG) {
+                    Log.d(TAG, "getSmsThreadId uri: " + uri +
+                            " NULL cursor! returning THREAD_NONE");
+                }
                 return THREAD_NONE;
             }
         } finally {
@@ -1472,7 +1478,7 @@ public class MessagingNotification {
 
     /**
      * Get the thread ID of the MMS message with the given URI
-     *
+     * 
      * @param context The context
      * @param uri The URI of the SMS message
      * @return The thread ID, or THREAD_NONE if the URI contains no entries
@@ -1488,49 +1494,29 @@ public class MessagingNotification {
                 null);
 
         if (cursor == null) {
+            if (DEBUG) {
+                Log.d(TAG, "getThreadId uri: " + uri + " NULL cursor! returning THREAD_NONE");
+            }
             return THREAD_NONE;
         }
 
         try {
             if (cursor.moveToFirst()) {
-                return cursor.getLong(cursor.getColumnIndex(Mms.THREAD_ID));
+                long threadId = cursor.getLong(cursor.getColumnIndex(Mms.THREAD_ID));
+                if (DEBUG) {
+                    Log.d(TAG, "getThreadId uri: " + uri +
+                            " returning threadId: " + threadId);
+                }
+                return threadId;
             } else {
+                if (DEBUG) {
+                    Log.d(TAG, "getThreadId uri: " + uri +
+                            " NULL cursor! returning THREAD_NONE");
+                }
                 return THREAD_NONE;
             }
         } finally {
             cursor.close();
         }
-    }
-
-    // Parse the user provided custom vibrate pattern into a long[]
-    public static long[] parseVibratePattern(String stringPattern) {
-        ArrayList<Long> arrayListPattern = new ArrayList<Long>();
-        Long l;
-        String[] splitPattern = stringPattern.split(",");
-        int VIBRATE_PATTERN_MAX_SECONDS = 60000;
-        int VIBRATE_PATTERN_MAX_PATTERN = 100;
-
-        for (int i = 0; i < splitPattern.length; i++) {
-            try {
-                l = Long.parseLong(splitPattern[i].trim());
-            } catch (NumberFormatException e) {
-                return null;
-            }
-            if (l > VIBRATE_PATTERN_MAX_SECONDS) {
-                return null;
-            }
-            arrayListPattern.add(l);
-        }
-
-        int size = arrayListPattern.size();
-        if (size > 0 && size < VIBRATE_PATTERN_MAX_PATTERN) {
-            long[] pattern = new long[size];
-            for (int i = 0; i < pattern.length; i++) {
-                pattern[i] = arrayListPattern.get(i);
-            }
-            return pattern;
-        }
-
-        return null;
     }
 }

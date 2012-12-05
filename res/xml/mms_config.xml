@@ -69,7 +69,7 @@
     <int name="smsToMmsTextThreshold">-1</int>
 
     <!-- If true, the text message will be split every 160 characters.
-        If false, the text will never be split before being sent. -->
+         If false, the text will never be split before being sent. -->
     <bool name="enableSplitSMS">false</bool>
 
     <!-- If true, The mms support slide duration.

@@ -17,16 +17,7 @@
 
 package com.android.mms.ui;
 
-import com.android.mms.R;
-import com.android.mms.dom.AttrImpl;
-import com.android.mms.dom.smil.SmilDocumentImpl;
-import com.android.mms.dom.smil.SmilPlayer;
-import com.android.mms.dom.smil.parser.SmilXmlSerializer;
-import com.android.mms.model.LayoutModel;
-import com.android.mms.model.RegionModel;
-import com.android.mms.model.SlideshowModel;
-import com.android.mms.model.SmilHelper;
-import com.google.android.mms.MmsException;
+import java.io.ByteArrayOutputStream;
 
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -38,23 +29,30 @@ import org.w3c.dom.smil.SMILDocument;
 import org.w3c.dom.smil.SMILElement;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.MediaController;
 import android.widget.MediaController.MediaPlayerControl;
 
-import java.io.ByteArrayOutputStream;
+import com.android.mms.R;
+import com.android.mms.dom.AttrImpl;
+import com.android.mms.dom.smil.SmilDocumentImpl;
+import com.android.mms.dom.smil.SmilPlayer;
+import com.android.mms.dom.smil.parser.SmilXmlSerializer;
+import com.android.mms.model.LayoutModel;
+import com.android.mms.model.RegionModel;
+import com.android.mms.model.SlideshowModel;
+import com.android.mms.model.SmilHelper;
+import com.google.android.mms.MmsException;
 
 /**
  * Plays the given slideshow in full-screen mode with a common controller.
@@ -240,8 +238,7 @@ public class SlideshowActivity extends Activity implements EventListener {
     }
 
     private void initMediaController() {
-        final Context dialogContext = new ContextThemeWrapper(this, android.R.style.Theme_DeviceDefault);
-        mMediaController = new MediaController(dialogContext, false);
+        mMediaController = new MediaController(SlideshowActivity.this, false);
         mMediaController.setMediaPlayer(new SmilPlayerController(mSmilPlayer));
         mMediaController.setAnchorView(findViewById(R.id.slide_view));
         mMediaController.setPrevNextListeners(

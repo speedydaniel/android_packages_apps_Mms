@@ -38,7 +38,7 @@
             <view xmlns:android="http://schemas.android.com/apk/res/android"
                 class="com.android.mms.ui.QuickContactDivot"
                 android:id="@+id/avatar"
-                position="right_middle"
+                position="right_upper"
                 android:layout_alignParentLeft="true"
                 android:layout_width="@dimen/avatar_width_height"
                 android:layout_height="@dimen/avatar_width_height" />
@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:layout_toRightOf="@id/avatar"
                 android:layout_alignParentRight="true"
-                android:background="@drawable/listitem_background"
+                android:background="@drawable/hairline_left"
                 android:orientation="vertical" >
 
                 <TextView android:id="@+id/text_view"
@@ -62,7 +62,7 @@
                     android:layout_height="wrap_content"
                     android:linksClickable="false"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textColor="@color/message_recieved"
+                    android:textColor="@android:color/holo_blue_light"
                     android:textSize="16sp" />
 
                 <LinearLayout
